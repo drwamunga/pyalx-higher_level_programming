@@ -1,20 +1,23 @@
 #!/usr/bin/python3
-"""Unittest for class Base
+"""Unittest for class Square
 """
 import unittest
 import os
+from io import StringIO
+from unittest.mock import patch
 from models.base import Base
 from models.rectangle import Rectangle
 from models.square import Square
 
 
-class TestBase(unittest.TestCase):
-    """Testing Base
+class TestSquare(unittest.TestCase):
+    """Testing Square
     """
 
     def tearDown(self):
         """Tears down obj count
         """
+
         Base._Base__nb_objects = 0
         self.assertEqual(Base._Base__nb_objects, 0)
 
@@ -22,132 +25,103 @@ class TestBase(unittest.TestCase):
         """Test instantiation
         """
 
-        o1 = Base()
-        o2 = Base(9)
-        o3 = Base(9.5)
-        o4 = Base(float('inf'))
-        o5 = Base("string")
-        o6 = Base(["list", 4, 2.5])
-        o7 = Base(None)
+        o1 = Square(5)
+        o2 = Square(id="hello", size=3)
+        with self.assertRaises(ValueError):
+            o3 = Square(-5, 3, 4)
+            o4 = Square(9.5, 9.3)
+            o5 = Square(float('inf'))
+            o6 = Square("string")
+            o9 = Square(None)
+
+        with self.assertRaises(TypeError):
+            o7 = Square(5, "hi")
+            o8 = Square(5, None)
+            o10 = Square(5, float('inf'))
+            o11 = Square(5, 9.5)
+            o12 = Square()
 
         self.assertEqual(o1.id, 1)
-        self.assertEqual(o2.id, 9)
-        self.assertEqual(o3.id, 9.5)
-        self.assertEqual(o4.id, float('inf'))
-        self.assertEqual(o5.id, "string")
-        self.assertEqual(o6.id, ["list", 4, 2.5])
-        self.assertEqual(o7.id, 2)
-        self.assertEqual(Base._Base__nb_objects, 2)
+        self.assertEqual(o1._Base__nb_objects, 3)
+        self.assertEqual(o2.id, 'hello')
+        self.assertEqual(o2._Base__nb_objects, 3)
 
-    def test_to_json_string(self):
-        """Testing to_json_string()
+    def test_area(self):
+        """Testing area()
         """
 
-        o1_1 = [{"hi": 1, "yo": "hol"}]
-        o1_2 = [{"hello": 3}]
-        o1_3 = None
-        o1_4 = "a string"
-        o1_5 = 123
-        o1_6 = [[1, 2, 3]]
-        o1_7 = []
+        o1 = Square(5)
+        o2 = Square(999, 0, 0, "helloo")
+        o3 = Square(id="hello", size=3, x=1, y=0)
 
-        self.assertCountEqual(Base.to_json_string(o1_1),
-                              '[{"hi": 1, "yo": "hol"}]')
-        self.assertCountEqual(Base.to_json_string(o1_2), '[{"hello": 3}]')
-        self.assertCountEqual(Base.to_json_string(o1_3), '[]')
-        self.assertCountEqual(Base.to_json_string(o1_4), '"a string"')
-        with self.assertRaises(TypeError):
-            Base.to_json_string(o1_5)
-        self.assertCountEqual(Base.to_json_string(o1_6), '[[1, 2, 3]]')
-        self.assertCountEqual(Base.to_json_string(o1_7), '[]')
+        self.assertEqual(o1.area(), 25)
+        self.assertEqual(o2.area(), 998001)
+        self.assertEqual(o3.area(), 9)
 
-    def test_from_json_string(self):
-        """Testing from_json_string(), uses to_json_string to format,
-        anything not in format should return []
+    def test_display(self):
+        """Testing display()
         """
 
-        o2_1 = [{"hi": 1, "yo": "hol"}]
-        r2_1 = Base.to_json_string(o2_1)
-        o2_2 = [{"hello": 3}]
-        r2_2 = Base.to_json_string(o2_2)
-        o2_3 = None
-        r2_3 = Base.to_json_string(o2_3)
-        o2_4 = "a string"
-        r2_4 = Base.to_json_string(o2_4)
-        o2_5 = 123
-        o2_6 = [[1, 2, 3]]
-        r2_6 = Base.to_json_string(o2_6)
-        o2_7 = []
-        r2_7 = Base.to_json_string(o2_7)
+        o1 = Square(4)
+        o2 = Square(id="hello", size=3, x=1, y=0)
 
-        self.assertEqual(Base.from_json_string(r2_1), o2_1)
-        self.assertEqual(Base.from_json_string(r2_2), o2_2)
-        self.assertEqual(Base.from_json_string(r2_3), [])
-        self.assertEqual(Base.from_json_string(r2_4), o2_4)
-        self.assertEqual(Base.from_json_string(o2_5), [])
-        self.assertEqual(Base.from_json_string(r2_6), o2_6)
-        self.assertEqual(Base.from_json_string(r2_7), o2_7)
-        self.assertEqual(Base.from_json_string(o2_1), [])
-        self.assertEqual(Base.from_json_string(o2_3), [])
-        self.assertEqual(Base.from_json_string(o2_7), [])
+        with patch('sys.stdout', new=StringIO()) as fakeOutput:
+            o1.display()
+            self.assertEqual(fakeOutput.getvalue(), '####\n####\n####\n####\n')
 
-    def test_create(self):
-        """Testing create()
+        with patch('sys.stdout', new=StringIO()) as fakeOutput:
+            o2.display()
+            self.assertEqual(fakeOutput.getvalue(), ' ###\n ###\n ###\n')
+
+    def test_str(self):
+        """Testing __str__()
         """
 
-        o3_1 = {'id': 1, 'width': 1, 'height': 2, 'x': 2, 'y': 2}
-        r3_1 = Rectangle.create(**o3_1)
-        self.assertEqual(r3_1.__str__(), '[Rectangle] (1) 2/2 - 1/2')
+        o1 = Square(5)
+        o2 = Square(3, 2)
+        o3 = Square(1, 2, 3, 4)
+        o4 = Square(id="hello", size=3, x=1, y=0)
 
-        o3_2 = {'id': 2, 'size': 3, 'x': 4, 'y': 5}
-        s3_1 = Square.create(**o3_2)
-        self.assertEqual(s3_1.__str__(), '[Square] (2) 4/5 - 3')
+        self.assertEqual(o1.__str__(), '[Square] (1) 0/0 - 5')
+        self.assertEqual(o2.__str__(), '[Square] (2) 2/0 - 3')
+        self.assertEqual(o3.__str__(), '[Square] (4) 2/3 - 1')
+        self.assertEqual(o4.__str__(), '[Square] (hello) 1/0 - 3')
 
-        o3_2 = {'id': 1, 'width': "string", 'height': 2, 'x': 2, 'y': 2}
-        o3_3 = {'id': 2, 'size': "string", 'x': 4, 'y': 5}
-        with self.assertRaises(TypeError):
-            r3_2 = Rectangle.create(**o3_2)
-            s3_2 = Square.create(**o3_3)
-
-    def test_save_to_file(self):
-        """Testing save_to_file()
+    def test_update(self):
+        """Testing update()
         """
 
-        o4_1 = Rectangle(10, 7, 2, 8)
-        o4_2 = Rectangle(2, 4)
-        o4_3 = Square(10, 7, 2)
-        o4_4 = Square(8)
+        o1 = Square(5)
+        o2 = Square(3, 2)
+        o3 = Square(1, 2, 3, 4)
+        o4 = Square(id="hello", size=3, x=1, y=0)
 
-        rsave = Rectangle.save_to_file([o4_1, o4_2])
-        ssave = Square.save_to_file([o4_3, o4_4])
+        o1.update(6, 1, 2, 8)
+        self.assertEqual(o1.__str__(), '[Square] (6) 2/8 - 1')
+        o2.update(1, 2, 3, id="hello")
+        self.assertEqual(o2.__str__(), '[Square] (hello) 2/0 - 3')
+        with self.assertRaises(ValueError):
+            o3.update("hello", -5)
+            o4.update(x=9.5)
 
-        self.assertTrue(os.path.isfile('Rectangle.json'))
-        self.assertTrue(os.path.isfile('Square.json'))
-
-    def test_load_from_file(self):
-        """Testing load_from_file()
+    def test_to_dictionary(self):
+        """Testing to_dictionary()
         """
 
-        o5_1 = Rectangle(10, 7, 2, 8)
-        o5_2 = Rectangle(2, 4)
-        o5_3 = Square(10, 7, 2)
-        o5_4 = Square(8)
+        o1 = Square(5)
+        o2 = Square(5, 6)
+        o3 = Square(1, 2, 3, 5)
+        o4 = Square(3, 2, id="holberton")
 
-        rsave = Rectangle.save_to_file([o5_1, o5_2])
-        ssave = Square.save_to_file([o5_3, o5_4])
+        d1 = {'id': 1, 'size': 5, 'x': 0, 'y': 0}
+        d2 = {'id': 2, 'size': 5, 'x': 6, 'y': 0}
+        d3 = {'id': 5, 'size': 1, 'x': 2, 'y': 3}
+        d4 = {'id': 'holberton', 'size': 3, 'x': 2, 'y': 0}
 
-        rlist = Rectangle.load_from_file()
-        slist = Square.load_from_file()
-
-        self.assertIsInstance(rlist[0], Rectangle)
-        self.assertIsInstance(rlist[1], Rectangle)
-        self.assertIsInstance(slist[0], Square)
-        self.assertIsInstance(slist[1], Square)
-
-        self.assertEqual(rlist[0].__str__(), '[Rectangle] (1) 2/8 - 10/7')
-        self.assertEqual(rlist[1].__str__(), '[Rectangle] (2) 0/0 - 2/4')
-        self.assertEqual(slist[0].__str__(), '[Square] (3) 7/2 - 10')
-        self.assertEqual(slist[1].__str__(), '[Square] (4) 0/0 - 8')
+        self.assertDictEqual(o1.to_dictionary(), d1)
+        self.assertDictEqual(o2.to_dictionary(), d2)
+        self.assertDictEqual(o3.to_dictionary(), d3)
+        self.assertDictEqual(o4.to_dictionary(), d4)
 
 if __name__ == '__main__':
     unittest.main()
